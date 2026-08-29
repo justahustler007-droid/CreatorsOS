@@ -1,0 +1,14 @@
+{% extends "_base.html" %}
+{% block content %}
+<p class="eyebrow">Pitch update</p>
+<h1>{{ brand_name }} just replied</h1>
+<p>
+  Your pitch to <strong>{{ brand_name }}</strong> moved out of the inbox and into a conversation. The next message you send sets the tone for the entire deal.
+</p>
+<a href="{{ app_url }}/brand-finder" class="cta">Open pipeline</a>
+<div class="divider"></div>
+<p class="meta" style="margin-bottom: 6px;">A note on tempo:</p>
+<div class="insight">
+  Pitches that move from <em>replied</em> to <em>negotiating</em> within 48 hours close <strong>3× more often</strong> than ones that stall. Reply with intent — but don't drop your rate yet.
+</div>
+{% endblock %}

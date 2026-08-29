@@ -1,0 +1,20 @@
+{% extends "_base.html" %}
+{% block content %}
+<p class="eyebrow">New collab request</p>
+<h1>{{ from_name }} wants to collaborate</h1>
+<p>
+  {{ from_name }} runs a <strong>{{ niche }}</strong> channel
+  {% if follower_count %}with <strong>{{ follower_count }}</strong> followers{% endif %}
+  and has a <strong>{{ compatibility }}%</strong> audience match with you.
+</p>
+<p class="meta">
+  Their message:
+</p>
+<p style="padding: 16px 18px; background: rgba(255,255,255,0.04); border-radius: 10px; font-style: italic; color: #E2E8F0;">
+  {{ message }}
+</p>
+<a href="{{ app_url }}/network?tab=inbox" class="cta">Open inbox</a>
+<div class="insight">
+  Replying within 24h lifts your acceptance probability by roughly 2×. A short, intentional response usually outperforms a polished long one.
+</div>
+{% endblock %}

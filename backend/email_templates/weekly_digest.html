@@ -1,0 +1,33 @@
+{% extends "_base.html" %}
+{% block content %}
+<p class="eyebrow">Your week in numbers</p>
+<h1>Quiet wins, sharper compounding</h1>
+<p>
+  A snapshot of the last seven days across pitches, connections and revenue.
+</p>
+
+<div class="stats">
+  <div class="stat">
+    <span class="num">{{ outreach }}</span>
+    <span class="lbl">Pitches</span>
+  </div>
+  <div class="stat" style="margin-left: 8px;">
+    <span class="num">{{ replies }}</span>
+    <span class="lbl">Replies</span>
+  </div>
+  <div class="stat" style="margin-left: 8px;">
+    <span class="num">{{ connections }}</span>
+    <span class="lbl">Connections</span>
+  </div>
+  <div class="stat" style="margin-left: 8px;">
+    <span class="num">{{ earned_label }}</span>
+    <span class="lbl">Earned</span>
+  </div>
+</div>
+
+<div class="insight" style="margin-top: 28px;">
+  {{ insight }}
+</div>
+
+<a href="{{ app_url }}/dashboard" class="cta" style="margin-top: 26px;">Open dashboard</a>
+{% endblock %}
