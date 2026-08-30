@@ -4,7 +4,7 @@ import axios from 'axios';
 import { FireballLogo } from '../components/FireballLogo';
 import { useAuth } from '../context/AuthContext';
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = 'https://creatorsos-1.onrender.com/api';
 
 export const AuthCallback = () => {
   const navigate = useNavigate();
@@ -17,24 +17,39 @@ export const AuthCallback = () => {
 
     const processAuth = async () => {
       const hash = window.location.hash;
-      const sessionIdMatch = hash.match(/session_id=([^&]+)/);
 
-      if (!sessionIdMatch) {
-        alert('CreatorOS: No session_id found in URL.');
-        navigate('/');
+      const match = hash.match(/session_id=([^&]+)/);
+
+      if (!match) {
+        console.error('No session_id found');
+        navigate('/', { replace: true });
         return;
       }
 
-      const sessionId = sessionIdMatch[1];
+      const sessionId = decodeURIComponent(match[1]);
+
+      console.log('Session ID found');
+      console.log('Backend:', API);
 
       try {
         const response = await axios.post(
           `${API}/auth/session`,
-          { session_id: sessionId },
-          { withCredentials: true }
+          {
+            session_id: sessionId,
+          },
+          {
+            withCredentials: true,
+            timeout: 15000,
+          }
         );
 
+        console.log('Authentication successful');
+
         const { session_token, ...userData } = response.data;
+
+        if (!session_token) {
+          throw new Error('Backend did not return session_token');
+        }
 
         setUserData(userData, session_token);
 
@@ -45,22 +60,29 @@ export const AuthCallback = () => {
         );
 
         navigate('/dashboard', {
-          state: { user: userData },
-          replace: true
+          replace: true,
         });
 
       } catch (error) {
-        console.error('Auth error:', error);
+        console.error('AUTH ERROR:', error);
 
-        const message =
-          error?.response?.data?.detail ||
-          error?.response?.data?.error_description ||
-          error?.message ||
-          'Authentication failed';
+        if (error.response) {
+          console.error(
+            'Backend response:',
+            error.response.status,
+            error.response.data
+          );
+        } else if (error.request) {
+          console.error('Backend did not respond');
+        } else {
+          console.error('Request error:', error.message);
+        }
 
-        alert(`CreatorOS login error:\n\n${message}`);
+        alert(
+          'Login failed. Please try again. Check the browser console for the exact error.'
+        );
 
-        navigate('/');
+        navigate('/', { replace: true });
       }
     };
 
