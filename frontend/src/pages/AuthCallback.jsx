@@ -1,35 +1,30 @@
-import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import axios from 'axios';
 import { FireballLogo } from '../components/FireballLogo';
 import { useAuth } from '../context/AuthContext';
 
 const API = 'https://creatorsos-1.onrender.com/api';
 
-export const AuthCallback = () => {
-  const navigate = useNavigate();
-  const hasProcessed = useRef(false);
+const AuthCallback = () => {
   const { setUserData } = useAuth();
 
   useEffect(() => {
-    if (hasProcessed.current) return;
-    hasProcessed.current = true;
-
     const processAuth = async () => {
       const hash = window.location.hash;
 
-      const match = hash.match(/session_id=([^&]+)/);
+      console.log('AUTH CALLBACK HASH:', hash);
 
-      if (!match) {
+      const params = new URLSearchParams(hash.substring(1));
+      const sessionId = params.get('session_id');
+
+      if (!sessionId) {
         console.error('No session_id found');
-        navigate('/', { replace: true });
+        window.location.href = '/';
         return;
       }
 
-      const sessionId = decodeURIComponent(match[1]);
-
       console.log('Session ID found');
-      console.log('Backend:', API);
+      console.log('Sending session to:', `${API}/auth/session`);
 
       try {
         const response = await axios.post(
@@ -38,20 +33,25 @@ export const AuthCallback = () => {
             session_id: sessionId,
           },
           {
-            withCredentials: true,
             timeout: 15000,
+            withCredentials: true,
           }
         );
 
-        console.log('Authentication successful');
+        console.log('AUTH SUCCESS:', response.data);
 
         const { session_token, ...userData } = response.data;
 
         if (!session_token) {
-          throw new Error('Backend did not return session_token');
+          throw new Error('No session token returned by backend');
         }
 
         setUserData(userData, session_token);
+
+        localStorage.setItem(
+          'creatoros_session_token',
+          session_token
+        );
 
         window.history.replaceState(
           {},
@@ -59,35 +59,33 @@ export const AuthCallback = () => {
           '/dashboard'
         );
 
-        navigate('/dashboard', {
-          replace: true,
-        });
+        window.location.href = '/dashboard';
 
       } catch (error) {
-        console.error('AUTH ERROR:', error);
+        console.error('AUTH FAILED:', error);
 
         if (error.response) {
           console.error(
-            'Backend response:',
-            error.response.status,
+            'STATUS:',
+            error.response.status
+          );
+          console.error(
+            'DATA:',
             error.response.data
           );
-        } else if (error.request) {
-          console.error('Backend did not respond');
-        } else {
-          console.error('Request error:', error.message);
         }
 
         alert(
-          'Login failed. Please try again. Check the browser console for the exact error.'
+          'Login failed: ' +
+          (error.response?.data?.detail || error.message)
         );
 
-        navigate('/', { replace: true });
+        window.location.href = '/';
       }
     };
 
     processAuth();
-  }, [navigate, setUserData]);
+  }, [setUserData]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
