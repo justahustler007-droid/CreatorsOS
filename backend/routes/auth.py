@@ -16,23 +16,31 @@ router = APIRouter(tags=["auth"])
 @router.post("/auth/session")
 async def create_session(request: Request, response: Response):
     """Exchange Emergent Auth session_id for a CreatorOS session."""
+
     body = await request.json()
     session_id = body.get("session_id")
 
     if not session_id:
-        raise HTTPException(status_code=400, detail="session_id required")
+        raise HTTPException(
+            status_code=400,
+            detail="session_id required",
+        )
 
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
             auth_response = await client.get(
                 "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
-                headers={"X-Session-ID": session_id},
+                headers={
+                    "X-Session-ID": session_id
+                },
             )
+
     except httpx.RequestError as e:
-    raise HTTPException(
-        status_code=502,
-        detail=f"Authentication service error: {str(e)}",
-    )
+        raise HTTPException(
+            status_code=502,
+            detail=f"Authentication service error: {str(e)}",
+        )
+
     if auth_response.status_code != 200:
         raise HTTPException(
             status_code=401,
@@ -58,6 +66,7 @@ async def create_session(request: Request, response: Response):
 
     if existing_user:
         user_id = existing_user["user_id"]
+
     else:
         user_id = f"user_{uuid.uuid4().hex[:12]}"
 
@@ -74,7 +83,11 @@ async def create_session(request: Request, response: Response):
         await db.users.insert_one(new_user)
 
     session_token = f"sess_{uuid.uuid4().hex}"
-    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+
+    expires_at = (
+        datetime.now(timezone.utc)
+        + timedelta(days=7)
+    )
 
     session_doc = {
         "session_id": str(uuid.uuid4()),
@@ -108,22 +121,36 @@ async def create_session(request: Request, response: Response):
 
 
 @router.get("/auth/me")
-async def get_me(user: dict = Depends(get_current_user)):
+async def get_me(
+    user: dict = Depends(get_current_user),
+):
     """Get current authenticated user."""
     return user
 
 
 @router.post("/auth/logout")
-async def logout(request: Request, response: Response):
+async def logout(
+    request: Request,
+    response: Response,
+):
     """Logout and clear the current session."""
 
-    session_token = request.cookies.get("session_token")
+    session_token = request.cookies.get(
+        "session_token"
+    )
 
     if not session_token:
-        auth_header = request.headers.get("Authorization")
+        auth_header = request.headers.get(
+            "Authorization"
+        )
 
-        if auth_header and auth_header.startswith("Bearer "):
-            session_token = auth_header.split(" ", 1)[1]
+        if auth_header and auth_header.startswith(
+            "Bearer "
+        ):
+            session_token = auth_header.split(
+                " ",
+                1,
+            )[1]
 
     if session_token:
         await db.user_sessions.delete_one(
@@ -137,7 +164,9 @@ async def logout(request: Request, response: Response):
         samesite="none",
     )
 
-    return {"message": "Logged out successfully"}
+    return {
+        "message": "Logged out successfully"
+    }
 
 
 @router.post("/auth/verify-access-code")
@@ -147,12 +176,21 @@ async def verify_access_code(
 ):
     """Verify early access code."""
 
-    submitted = (data.code or "").strip().upper()
+    submitted = (
+        (data.code or "")
+        .strip()
+        .upper()
+    )
 
     if submitted == "FIRST100":
+
         await db.users.update_one(
             {"user_id": user["user_id"]},
-            {"$set": {"early_access": True}},
+            {
+                "$set": {
+                    "early_access": True
+                }
+            },
         )
 
         return {
@@ -173,7 +211,10 @@ async def get_access_status(
     """Get user's access and onboarding status."""
 
     return {
-        "early_access": user.get("early_access", False),
+        "early_access": user.get(
+            "early_access",
+            False,
+        ),
         "onboarding_complete": user.get(
             "onboarding_complete",
             False,
