@@ -1,4 +1,3 @@
-```python
 """Authentication & paywall endpoints."""
 
 import uuid
@@ -181,4 +180,3 @@ async def get_access_status(
             False,
         ),
     }
-```
